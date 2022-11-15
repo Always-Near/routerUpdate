@@ -63,6 +63,22 @@ func updateIP(customIPFile *string) {
 	ifErrPanic(err)
 	fmt.Println("file created")
 	defer fi.Close()
+
+	fmt.Println("Reading IP URL")
+	repsonse, err := http.Get(ipURL)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("URL read")
+	defer repsonse.Body.Close()
+
+	_, err = io.Copy(fi, repsonse.Body)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	rf, err := os.Open(*customIPFile)
 	if err == nil {
 		defer rf.Close()
@@ -84,29 +100,6 @@ func updateIP(customIPFile *string) {
 		fmt.Println("Copied bytes: ")
 	} else {
 		fmt.Println(err)
-	}
-	fmt.Println("Reading IP URL")
-	repsonse, err := http.Get(ipURL)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println("URL read")
-	defer repsonse.Body.Close()
-	buff := make([]byte, 4)
-	for {
-		totalBytes, err := repsonse.Body.Read(buff)
-		if totalBytes > 0 && err == nil {
-			if _, writeErr := fi.Write(buff); writeErr != nil {
-				ifErrPanic(writeErr)
-			}
-		}
-		if err != nil {
-			if err != io.EOF {
-				ifErrPanic(err)
-			}
-			break
-		}
 	}
 }
 
